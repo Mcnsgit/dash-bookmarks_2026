@@ -1,0 +1,86 @@
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  color: #0e1322;
+  margin: 0;
+  background: #f7f8fb;
+}
+@media (prefers-color-scheme: dark) {
+  body { background: #0e1322; color: #eef0f6; }
+  .field input, .field select { background: #1c2233; color: #eef0f6; border-color: #2c3346; }
+  header { background: #1c2233; border-color: #2c3346; }
+  .tab-info { background: #1c2233; }
+  button.secondary { background: #2c3346; color: #eef0f6; border-color: #2c3346; }
+  .sep::before, .sep::after { background: #2c3346; }
+  .status[data-kind=ok]  { color: #34d399; }
+  .status[data-kind=err] { color: #f87171; }
+}
+
+/* ---- Popup ------------------------------------------------------------- */
+.popup { width: 340px; }
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; background: #fff;
+  border-bottom: 1px solid #eef0f6;
+}
+header .logo { display: flex; align-items: center; gap: 8px; }
+header h1 { font-size: 14px; margin: 0; font-weight: 600; }
+header a { color: inherit; text-decoration: none; font-size: 16px; }
+main { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+.tab-info {
+  display: flex; align-items: flex-start; gap: 8px; padding: 8px;
+  background: #eef0f6; border-radius: 8px;
+}
+.tab-info .title { font-size: 13px; font-weight: 600; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.tab-info .url   { font-size: 11px; color: #586079; word-break: break-all; margin-top: 2px; }
+.min0 { min-width: 0; flex: 1; }
+
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #586079; }
+.field.row { flex-direction: row; align-items: center; gap: 8px; }
+.field input, .field select {
+  font-size: 13px; padding: 6px 8px; border-radius: 6px;
+  border: 1px solid #d8dce8; background: #fff; outline: none; color: inherit;
+}
+.field input:focus, .field select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.2); }
+
+button {
+  font-size: 13px; padding: 8px 12px; border-radius: 8px; border: 0; cursor: pointer; font-weight: 600;
+}
+button.primary   { background: #4f46e5; color: #fff; }
+button.primary:hover { background: #4338ca; }
+button.secondary { background: #eef0f6; color: #0e1322; border: 1px solid #d8dce8; }
+button.secondary:hover { background: #e0e7ff; }
+button.small { font-size: 11px; padding: 4px 8px; }
+
+.sep { position: relative; text-align: center; color: #94a3b8; font-size: 11px; margin: 4px 0; }
+.sep::before, .sep::after {
+  content: ''; position: absolute; top: 50%; width: 42%; height: 1px; background: #eef0f6;
+}
+.sep::before { left: 0; } .sep::after { right: 0; }
+.sep span { background: #f7f8fb; padding: 0 8px; }
+@media (prefers-color-scheme: dark) { .sep span { background: #0e1322; } }
+
+.status { font-size: 12px; min-height: 1em; text-align: center; }
+.status[data-kind=ok]  { color: #059669; }
+.status[data-kind=err] { color: #dc2626; }
+
+.setup { padding: 16px; text-align: center; }
+.hidden { display: none !important; }
+
+/* ---- Options ----------------------------------------------------------- */
+.options { max-width: 520px; margin: 0 auto; padding: 24px; }
+.options h1 { font-size: 20px; margin: 0 0 12px; }
+.options h2 { font-size: 14px; margin: 24px 0 8px; }
+.options .field { margin-bottom: 12px; }
+.hint { font-size: 12px; color: #586079; margin-top: 4px; }
+.hint code { background: rgba(99,102,241,.12); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+#testResult[data-kind=ok]  { color: #059669; }
+#testResult[data-kind=err] { color: #dc2626; }
+#saveStatus[data-kind=ok]  { color: #059669; margin-left: 8px; font-size: 12px; }
+.shortcuts { font-size: 12px; padding-left: 18px; }
+kbd {
+  font-family: ui-monospace, monospace; font-size: 11px;
+  padding: 1px 5px; background: #eef0f6; border-radius: 4px; border: 1px solid #d8dce8;
+}
+@media (prefers-color-scheme: dark) { kbd { background: #1c2233; border-color: #2c3346; } }

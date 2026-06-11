@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bookmark Manager</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="popup">
+  <header>
+    <div class="logo">
+      <img src="icons/icon-32.png" alt="" width="24" height="24">
+      <h1>Bookmark Manager</h1>
+    </div>
+    <a id="openOptions" href="#" title="Settings">⚙️</a>
+  </header>
+
+  <main id="main">
+    <section class="tab-info">
+      <img id="favicon" src="" alt="" width="16" height="16">
+      <div class="min0">
+        <div id="title" class="title"></div>
+        <div id="url" class="url"></div>
+      </div>
+    </section>
+
+    <label class="field">
+      <span>Folder</span>
+      <select id="folder">
+        <option value="">— None —</option>
+      </select>
+    </label>
+    <label class="field">
+      <span>Tags</span>
+      <input id="tags" type="text" placeholder="comma, separated">
+    </label>
+
+    <button id="saveTab" class="primary">Save this tab</button>
+
+    <div class="sep"><span>or</span></div>
+
+    <div class="session">
+      <label class="field">
+        <span>Session name</span>
+        <input id="sessionName" type="text" placeholder="My research — Tue 10:30">
+      </label>
+      <button id="saveSession" class="secondary">
+        Save all <span id="tabCount">…</span> tabs as session
+      </button>
+    </div>
+
+    <div id="status" class="status"></div>
+  </main>
+
+  <div id="setup" class="setup hidden">
+    <p>The companion isn’t configured yet. Set your bookmark manager URL to get started.</p>
+    <button id="openOptions2" class="primary">Open settings</button>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

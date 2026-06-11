@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bookmark Manager — settings</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="options">
+  <h1>Companion settings</h1>
+
+  <label class="field">
+    <span>Backend URL</span>
+    <input id="backendUrl" type="text" placeholder="http://bookmark-manager  or  http://100.64.0.5">
+  </label>
+  <p class="hint">
+    Reachable on your Tailnet. Test with: <code id="healthUrl"></code> —
+    <button id="testConn" type="button" class="secondary small">Test connection</button>
+    <span id="testResult"></span>
+  </p>
+
+  <label class="field">
+    <span>Default folder</span>
+    <select id="defaultFolderId">
+      <option value="">— None —</option>
+    </select>
+  </label>
+
+  <label class="field">
+    <span>Default tags (comma-separated)</span>
+    <input id="defaultTags" type="text" placeholder="web, todo">
+  </label>
+
+  <label class="field row">
+    <input id="capturePinned" type="checkbox">
+    <span>Include pinned tabs when saving a session</span>
+  </label>
+
+  <button id="save" class="primary">Save settings</button>
+  <span id="saveStatus"></span>
+
+  <h2>Keyboard shortcuts</h2>
+  <ul class="shortcuts">
+    <li><kbd>Ctrl/Cmd</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> — save current tab</li>
+    <li><kbd>Ctrl/Cmd</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd> — save all tabs as session</li>
+  </ul>
+  <p class="hint">Change them at <code>chrome://extensions/shortcuts</code> (or <code>about:addons</code> in Firefox).</p>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

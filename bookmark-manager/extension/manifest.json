@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "Bookmark Manager Companion",
+  "short_name": "Bookmarks",
+  "version": "1.0.0",
+  "description": "One-click save the current tab — or save ALL open tabs as a session — to your self-hosted bookmark manager.",
+
+  "permissions": ["tabs", "storage", "activeTab", "contextMenus", "notifications"],
+  "host_permissions": ["<all_urls>"],
+
+  "action": {
+    "default_title": "Save to Bookmark Manager",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16":  "icons/icon-16.png",
+      "32":  "icons/icon-32.png",
+      "48":  "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+
+  "icons": {
+    "16":  "icons/icon-16.png",
+    "32":  "icons/icon-32.png",
+    "48":  "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+
+  "background": { "service_worker": "background.js", "type": "module" },
+
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+
+  "commands": {
+    "save-current-tab": {
+      "suggested_key": { "default": "Ctrl+Shift+S", "mac": "Command+Shift+S" },
+      "description": "Save the current tab"
+    },
+    "save-all-tabs-as-session": {
+      "suggested_key": { "default": "Ctrl+Shift+A", "mac": "Command+Shift+A" },
+      "description": "Save all tabs in this window as a session"
+    }
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "bookmark-companion@local",
+      "strict_min_version": "109.0"
+    }
+  }
+}

@@ -94,7 +94,7 @@ docker compose exec tailscale tailscale status
 ./restore.sh backup-2026-06-11.tar.gz
 ```
 
-## Importing Bookmarks
+## Browser Extension Companion\n\nA Manifest V3 extension lives at [`extension/`](extension/) for Chrome / Edge / Brave / Firefox.\n\n- Toolbar popup: one-click save the current tab\n- One click to save **all open tabs in this window** as a Session\n- Right-click any page or link \u2192 *Save to Bookmark Manager*\n- Keyboard shortcuts: `Ctrl/Cmd+Shift+S` (save tab), `Ctrl/Cmd+Shift+A` (save all as session)\n- Default folder + tags configurable in extension Options\n\nLoad it via `chrome://extensions/` \u2192 **Load unpacked** \u2192 select `extension/`. Full setup in [extension/README.md](extension/README.md).\n\n## Importing Bookmarks
 
 1. Export from your browser:
    - **Chrome/Edge/Brave**: Bookmark manager → ⋮ → Export bookmarks
