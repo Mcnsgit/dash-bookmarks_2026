@@ -1,15 +1,21 @@
-import { useState } from 'react';
-import { Navigate, useNavigate, Link } from 'react-router-dom';
-import { Bookmark, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Bookmark, Loader2, Key } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../auth.js';
 
 export default function LoginView() {
   const { user, status, signup, login } = useAuth();
   const [busy, setBusy] = useState(false);
+  const [params] = useSearchParams();
   const nav = useNavigate();
   const isSetup = !!status?.needs_setup;
   const [form, setForm] = useState({ email: '', password: '', display_name: '' });
+
+  useEffect(() => {
+    const err = params.get('error');
+    if (err) toast.error(err);
+  }, [params]);
 
   if (user) return <Navigate to="/" replace />;
   if (status && !status.auth_enabled) return <Navigate to="/" replace />;
@@ -46,6 +52,19 @@ export default function LoginView() {
           <div className="mb-4 text-xs rounded-lg p-3 bg-brand-50 dark:bg-ink-800 text-brand-700 dark:text-brand-300">
             First-run setup: choose the credentials you’ll use to access this server.
           </div>
+        )}
+
+        {status?.oidc_enabled && (
+          <>
+            <a className="btn-soft w-full justify-center mb-3" href="/api/auth/oidc/login">
+              <Key className="w-4 h-4" />
+              {isSetup ? `Set up with ${status.oidc_provider}` : `Continue with ${status.oidc_provider}`}
+            </a>
+            <div className="sep-or relative text-center text-xs text-ink-400 my-3">
+              <span className="bg-white dark:bg-ink-800 px-2 relative z-10">or {isSetup ? 'set a password' : 'sign in with password'}</span>
+              <div className="absolute inset-x-0 top-1/2 border-t border-ink-100 dark:border-ink-700" />
+            </div>
+          </>
         )}
 
         <div className="flex flex-col gap-3">

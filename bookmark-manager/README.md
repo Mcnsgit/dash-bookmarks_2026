@@ -29,6 +29,8 @@ Personal bookmark manager with BookmarkOS-style UI, deployed on Hetzner CX33 (or
 
 ## Quick Start
 
+> **New here?** See **[DEPLOYMENT.md](DEPLOYMENT.md)** for a complete, copy-pasteable Hetzner + Tailscale + OIDC walkthrough.
+
 ### Prerequisites
 
 - Linux server (tested on Hetzner CX33 / 8GB / 4 vCPU)

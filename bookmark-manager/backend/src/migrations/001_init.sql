@@ -10,9 +10,12 @@ CREATE TABLE IF NOT EXISTS users (
   email         TEXT        UNIQUE NOT NULL,
   display_name  TEXT,
   password_hash TEXT,                      -- NULL when auth disabled / pre-setup
+  oidc_sub      TEXT,                      -- subject claim from OIDC provider (unique per issuer)
+  oidc_issuer   TEXT,                      -- OIDC issuer URL
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_login_at TIMESTAMPTZ
 );
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_oidc ON users(oidc_issuer, oidc_sub) WHERE oidc_sub IS NOT NULL;
 
 -- PERSONAL ACCESS TOKENS (for the browser extension / scripts) -------------
 CREATE TABLE IF NOT EXISTS personal_access_tokens (

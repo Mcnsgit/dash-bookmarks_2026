@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
 import LoginView from './views/LoginView.jsx';
+import OidcCallbackView from './views/OidcCallbackView.jsx';
 import DashboardView from './views/DashboardView.jsx';
 import BookmarksView from './views/BookmarksView.jsx';
 import ReadingListView from './views/ReadingListView.jsx';
@@ -22,6 +23,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginView />} />
+      <Route path="/oidc/callback" element={<OidcCallbackView />} />
       <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
         <Route index element={<DashboardView />} />
         <Route path="bookmarks" element={<BookmarksView />} />

@@ -6,6 +6,7 @@ import {
   generatePatRaw, hashToken,
 } from '../auth.js';
 import { authenticate } from '../middleware/authMiddleware.js';
+import * as oidc from '../oidc.js';
 
 const r = Router();
 
@@ -15,10 +16,12 @@ const Password = z.string().min(8, 'Password must be at least 8 characters');
 // Status: tells the frontend whether auth is on and whether setup is needed.
 r.get('/status', async (_req, res, next) => {
   try {
-    const { rows } = await q(`SELECT 1 FROM users WHERE password_hash IS NOT NULL LIMIT 1`);
+    const { rows } = await q(`SELECT 1 FROM users WHERE password_hash IS NOT NULL OR oidc_sub IS NOT NULL LIMIT 1`);
     res.json({
-      auth_enabled: AUTH_ENABLED,
-      needs_setup:  AUTH_ENABLED && rows.length === 0,
+      auth_enabled:  AUTH_ENABLED,
+      needs_setup:   AUTH_ENABLED && rows.length === 0,
+      oidc_enabled:  oidc.oidcEnabled(),
+      oidc_provider: oidc.oidcProviderName(),
     });
   } catch (e) { next(e); }
 });
@@ -27,7 +30,7 @@ r.get('/status', async (_req, res, next) => {
 r.post('/signup', async (req, res, next) => {
   try {
     if (!AUTH_ENABLED) return res.status(400).json({ error: 'Auth is disabled' });
-    const existing = await q(`SELECT 1 FROM users WHERE password_hash IS NOT NULL LIMIT 1`);
+    const existing = await q(`SELECT 1 FROM users WHERE password_hash IS NOT NULL OR oidc_sub IS NOT NULL LIMIT 1`);
     if (existing.rows.length) return res.status(409).json({ error: 'Already configured. Please log in.' });
 
     const { email, password, display_name } = z.object({
@@ -153,5 +156,76 @@ function sanitize(u) {
   const { password_hash, ...rest } = u; // strip
   return rest;
 }
+
+// ===== OIDC / SSO =========================================================
+
+// Kick off the OIDC flow. Returns 302 to the provider's authorize URL.
+r.get('/oidc/login', async (_req, res, next) => {
+  try {
+    if (!AUTH_ENABLED)     return res.status(400).send('Auth disabled');
+    if (!oidc.oidcEnabled()) return res.status(400).send('OIDC not configured');
+    const url = await oidc.buildAuthorizationUrl();
+    res.redirect(url);
+  } catch (e) { next(e); }
+});
+
+// OIDC callback. Provider redirects here with ?code=...&state=...
+// We validate, find-or-create the single user, mint a JWT, then redirect to the
+// frontend with the token in the URL fragment (so it never hits server logs).
+r.get('/oidc/callback', async (req, res, next) => {
+  const fail = (msg) => res.redirect(`/login?error=${encodeURIComponent(msg)}`);
+  try {
+    if (!AUTH_ENABLED || !oidc.oidcEnabled()) return fail('OIDC not configured');
+    if (req.query.error) return fail(String(req.query.error_description || req.query.error));
+
+    const claims = await oidc.exchangeCallback(req.query);
+    if (!claims.email) return fail('Provider did not return an email');
+    if (!oidc.isEmailAllowed(claims.email)) return fail('Email is not in the allow-list');
+
+    // Single-user model: find by oidc_sub OR by email. If a user already exists
+    // with a different identity, we re-key it to this OIDC identity (single-user
+    // can only ever be one row).
+    let user;
+    const existingBySub = await q(
+      `SELECT * FROM users WHERE oidc_sub = $1 AND oidc_issuer = $2 LIMIT 1`,
+      [claims.sub, claims.issuer]
+    );
+    if (existingBySub.rows[0]) {
+      user = existingBySub.rows[0];
+    } else {
+      const anyUser = await q(`SELECT * FROM users LIMIT 1`);
+      if (anyUser.rows[0]) {
+        // Existing user (perhaps created via no-auth or password signup). Only
+        // attach OIDC if the emails match \u2014 prevents account takeover.
+        if (anyUser.rows[0].email.toLowerCase() !== claims.email) {
+          return fail(`Existing account email (${anyUser.rows[0].email}) doesn't match SSO email (${claims.email})`);
+        }
+        const upd = await q(
+          `UPDATE users SET oidc_sub = $1, oidc_issuer = $2,
+                            display_name = COALESCE(display_name, $3),
+                            last_login_at = now()
+           WHERE id = $4 RETURNING *`,
+          [claims.sub, claims.issuer, claims.name, anyUser.rows[0].id]
+        );
+        user = upd.rows[0];
+      } else {
+        // Fresh install \u2014 create the (first and only) user from this SSO identity.
+        const ins = await q(
+          `INSERT INTO users (email, display_name, oidc_sub, oidc_issuer, last_login_at)
+           VALUES ($1, $2, $3, $4, now()) RETURNING *`,
+          [claims.email, claims.name || 'Me', claims.sub, claims.issuer]
+        );
+        user = ins.rows[0];
+      }
+    }
+    await q('UPDATE users SET last_login_at = now() WHERE id = $1', [user.id]);
+    const token = issueJwt(user);
+    // Token in URL fragment is invisible to the server and to proxies.
+    res.redirect(`/oidc/callback#token=${encodeURIComponent(token)}`);
+  } catch (e) {
+    console.error('[oidc] callback error', e);
+    return fail(e.message || 'OIDC failure');
+  }
+});
 
 export default r;

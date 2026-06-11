@@ -118,7 +118,8 @@ export default function SettingsView() {
         <h2 className="text-base font-semibold mb-2 flex items-center gap-2"><ShieldCheck className="w-4 h-4" /> About</h2>
         <p className="text-sm text-ink-500">
           Self-hosted bookmark manager — React + Node + PostgreSQL.
-          Auth: <code className="text-xs">{status?.auth_enabled ? 'enabled' : 'disabled (AUTH_ENABLED=false)'}</code>.
+          Auth: <code className="text-xs">{status?.auth_enabled ? 'enabled' : 'disabled (AUTH_ENABLED=false)'}</code>
+          {status?.oidc_enabled && <> · SSO: <code className="text-xs">{status.oidc_provider}</code></>}.
           Accessible only via Tailscale.
         </p>
       </section>

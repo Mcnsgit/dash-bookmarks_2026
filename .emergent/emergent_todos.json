@@ -1,26 +1,22 @@
 [
   {
-    "content": "Backend: schema + auth lib (bcryptjs, jsonwebtoken) + middleware (JWT + PAT + AUTH_ENABLED toggle)",
+    "content": "Backend: openid-client dep, schema (oidc_sub/oidc_issuer), oidc helper module",
     "status": "completed"
   },
   {
-    "content": "Backend: /api/auth routes (status, signup-first-run, login, me, tokens CRUD)",
+    "content": "Backend: /api/auth/oidc/login + /callback routes; expose oidc_enabled in status",
     "status": "completed"
   },
   {
-    "content": "Frontend: AuthContext + Login + Setup screens + protected routes + axios bearer",
+    "content": "Frontend: OIDC buttons on Login + Setup, /oidc/callback route that stores token",
     "status": "completed"
   },
   {
-    "content": "Frontend: PAT management in Settings + logout in header",
+    "content": "Update .env.example, README, write DEPLOYMENT.md with step-by-step instructions for Hetzner + Tailscale + Google/Authentik OIDC",
     "status": "completed"
   },
   {
-    "content": "Extension: PAT field in Options, Authorization header in apiFetch, validation via /me",
-    "status": "completed"
-  },
-  {
-    "content": "Update .env.example + README + re-tar",
+    "content": "Re-validate (lint, build) and re-tar",
     "status": "completed"
   }
 ]
