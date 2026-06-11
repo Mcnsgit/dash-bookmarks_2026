@@ -1,0 +1,12 @@
+{
+  "name": "Bookmark Manager",
+  "short_name": "Bookmarks",
+  "description": "Self-hosted bookmark manager",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e1322",
+  "theme_color": "#6366f1",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any" }
+  ]
+}

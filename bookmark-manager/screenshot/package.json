@@ -1,0 +1,16 @@
+{
+  "name": "bookmark-screenshot",
+  "version": "1.0.0",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "puppeteer-core": "^23.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

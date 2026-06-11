@@ -1,0 +1,30 @@
+[
+  {
+    "content": "Phase 1: Project scaffold (docker-compose, .env.example, deploy.sh, README)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Backend (Node/Express) — schema, routes, services, WebSocket, Vikunja, Import",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 3: Screenshot microservice (Puppeteer)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 4: Frontend (React PWA) — BookmarkOS-style UI, all views",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 5: Nginx config + Tailscale sidecar wiring",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 6: Backup/restore scripts + final docs",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 7: Syntax-validate generated files & finish",
+    "status": "completed"
+  }
+]

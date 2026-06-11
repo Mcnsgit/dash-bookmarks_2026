@@ -1,0 +1,152 @@
+# Self-Hosted Bookmark Manager — docker-compose stack
+#
+# Architecture: nginx shares the Tailscale container's network namespace
+# (sidecar pattern) so the app is reachable ONLY on the tailnet.
+
+name: bookmark-manager
+
+networks:
+  bookmark-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  screenshots:
+  ts-state:
+
+services:
+  # ----------------------------------------------------------
+  # Tailscale sidecar — the ONLY component with network access
+  # ----------------------------------------------------------
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: bm-tailscale
+    hostname: ${TS_HOSTNAME:-bookmark-manager}
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=${TS_HOSTNAME:-bookmark-manager}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_EXTRA_ARGS=--accept-routes
+    volumes:
+      - ts-state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    networks:
+      - bookmark-net
+
+  # ----------------------------------------------------------
+  # PostgreSQL 16 with full-text search
+  # ----------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: bm-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bookmarkuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-bookmarks}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./backend/src/migrations:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+    networks:
+      - bookmark-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bookmarkuser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 512m
+
+  # ----------------------------------------------------------
+  # Redis 7 — cache + websocket pubsub
+  # ----------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: bm-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - bookmark-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    mem_limit: 128m
+
+  # ----------------------------------------------------------
+  # Screenshot microservice (Puppeteer + Chromium)
+  # ----------------------------------------------------------
+  screenshot:
+    build: ./screenshot
+    container_name: bm-screenshot
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+    volumes:
+      - screenshots:/screenshots
+    restart: unless-stopped
+    networks:
+      - bookmark-net
+    mem_limit: 1g
+    shm_size: 1g
+
+  # ----------------------------------------------------------
+  # Backend API (Node + Express)
+  # ----------------------------------------------------------
+  backend:
+    build: ./backend
+    container_name: bm-backend
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-bookmarkuser}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-bookmarks}
+      - REDIS_URL=redis://redis:6379
+      - SCREENSHOT_SERVICE_URL=http://screenshot:5000
+      - NODE_ENV=production
+      - PORT=4000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - screenshots:/screenshots
+    restart: unless-stopped
+    networks:
+      - bookmark-net
+    mem_limit: 512m
+
+  # ----------------------------------------------------------
+  # Frontend (built static files served by its own nginx)
+  # ----------------------------------------------------------
+  frontend:
+    build: ./frontend
+    container_name: bm-frontend
+    restart: unless-stopped
+    networks:
+      - bookmark-net
+    mem_limit: 128m
+
+  # ----------------------------------------------------------
+  # nginx reverse-proxy — shares Tailscale network namespace
+  # ----------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: bm-nginx
+    depends_on:
+      - frontend
+      - backend
+      - tailscale
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - screenshots:/screenshots:ro
+    restart: unless-stopped
+    # Sidecar pattern: share tailscale's net so app is only on tailnet
+    network_mode: "service:tailscale"
