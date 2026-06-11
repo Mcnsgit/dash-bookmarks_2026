@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
+import RequireAuth from './components/RequireAuth.jsx';
+import LoginView from './views/LoginView.jsx';
 import DashboardView from './views/DashboardView.jsx';
 import BookmarksView from './views/BookmarksView.jsx';
 import ReadingListView from './views/ReadingListView.jsx';
@@ -10,14 +12,17 @@ import TagsView from './views/TagsView.jsx';
 import ImportView from './views/ImportView.jsx';
 import SettingsView from './views/SettingsView.jsx';
 import { useUI } from './store.js';
+import { useAuth } from './auth.js';
 import { connectWs } from './api.js';
 
 export default function App() {
   const initDark = useUI((s) => s.initDark);
-  useEffect(() => { initDark(); connectWs(); }, [initDark]);
+  const initAuth = useAuth((s) => s.init);
+  useEffect(() => { initDark(); initAuth(); connectWs(); }, [initDark, initAuth]);
   return (
     <Routes>
-      <Route path="/" element={<Layout />}>
+      <Route path="/login" element={<LoginView />} />
+      <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
         <Route index element={<DashboardView />} />
         <Route path="bookmarks" element={<BookmarksView />} />
         <Route path="bookmarks/folder/:folderId" element={<BookmarksView />} />

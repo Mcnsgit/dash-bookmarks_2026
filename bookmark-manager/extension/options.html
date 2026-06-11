@@ -19,6 +19,15 @@
   </p>
 
   <label class="field">
+    <span>Personal Access Token</span>
+    <input id="accessToken" type="password" placeholder="bmpat_…" autocomplete="off">
+  </label>
+  <p class="hint">
+    Generate one in the web app: <b>Settings → Personal access tokens → New token</b>.
+    Required when auth is enabled. Leave blank if running with <code>AUTH_ENABLED=false</code>.
+  </p>
+
+  <label class="field">
     <span>Default folder</span>
     <select id="defaultFolderId">
       <option value="">— None —</option>

@@ -6,11 +6,26 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- USERS --------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
-  id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  email        TEXT        UNIQUE NOT NULL,
-  display_name TEXT,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  email         TEXT        UNIQUE NOT NULL,
+  display_name  TEXT,
+  password_hash TEXT,                      -- NULL when auth disabled / pre-setup
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_login_at TIMESTAMPTZ
 );
+
+-- PERSONAL ACCESS TOKENS (for the browser extension / scripts) -------------
+CREATE TABLE IF NOT EXISTS personal_access_tokens (
+  id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name         TEXT        NOT NULL,
+  token_hash   TEXT        NOT NULL UNIQUE,   -- sha256 of the raw token
+  token_prefix TEXT        NOT NULL,          -- first 12 chars for display
+  last_used_at TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  revoked_at   TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_pat_user ON personal_access_tokens(user_id);
 
 -- FOLDERS (hierarchical) ---------------------------------------------------
 CREATE TABLE IF NOT EXISTS folders (

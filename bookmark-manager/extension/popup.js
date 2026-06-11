@@ -15,6 +15,23 @@ async function init() {
     $('#setup').classList.remove('hidden');
     return;
   }
+
+  // Pre-flight: health + (if needed) auth check.
+  try {
+    const h = await fetch(settings.backendUrl.replace(/\/+$/, '') + '/api/health');
+    if (!h.ok) throw new Error('Backend not reachable (' + h.status + ')');
+    const health = await h.json();
+    if (health.auth_enabled && !settings.accessToken) {
+      $('#main').classList.add('hidden');
+      const setup = $('#setup');
+      setup.querySelector('p').textContent = 'Auth is enabled but no access token is set. Add one in Settings.';
+      setup.classList.remove('hidden');
+      return;
+    }
+  } catch (e) {
+    setStatus('Backend unreachable — open Options to reconfigure', 'err');
+  }
+
   $('#tags').value = settings.defaultTags || '';
 
   // Current tab info

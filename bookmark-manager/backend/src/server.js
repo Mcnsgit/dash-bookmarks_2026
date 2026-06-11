@@ -8,9 +8,12 @@ import morgan from 'morgan';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 
-import { pool, ensureDefaultUser } from './db.js';
+import { pool } from './db.js';
 import { redisInit } from './redis.js';
+import { AUTH_ENABLED } from './auth.js';
+import { authenticate, initNoAuthUser } from './middleware/authMiddleware.js';
 
+import authRouter        from './routes/auth.js';
 import bookmarksRouter   from './routes/bookmarks.js';
 import foldersRouter     from './routes/folders.js';
 import tagsRouter        from './routes/tags.js';
@@ -31,14 +34,13 @@ app.use(compression());
 app.use(express.json({ limit: '20mb' }));
 app.use(morgan('tiny'));
 
-// Inject default user id (single-user mode; replace with JWT auth later).
-let DEFAULT_USER_ID = null;
-app.use((req, _res, next) => { req.userId = DEFAULT_USER_ID; next(); });
+// Public endpoints (no auth) ------------------------------------------------
+app.get('/api/health', (_req, res) => res.json({ ok: true, auth_enabled: AUTH_ENABLED, ts: Date.now() }));
+app.use('/api/auth', authRouter);
 
-// Health
-app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now() }));
+// Authenticated endpoints ---------------------------------------------------
+app.use('/api', authenticate);
 
-// Routes (all under /api)
 app.use('/api/bookmarks',    bookmarksRouter);
 app.use('/api/folders',      foldersRouter);
 app.use('/api/tags',         tagsRouter);
@@ -78,8 +80,8 @@ global.__broadcast = broadcast;
     try { await pool.query('SELECT 1'); break; }
     catch { await new Promise((r) => setTimeout(r, 1000)); }
   }
-  DEFAULT_USER_ID = await ensureDefaultUser();
-  console.log('[boot] default user id:', DEFAULT_USER_ID);
+  await initNoAuthUser();
+  console.log('[boot] AUTH_ENABLED =', AUTH_ENABLED);
   await redisInit();
 
   server.listen(PORT, '0.0.0.0', () => {

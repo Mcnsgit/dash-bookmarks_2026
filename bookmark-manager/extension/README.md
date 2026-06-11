@@ -25,9 +25,10 @@ Works in **Chrome**, **Edge**, **Brave**, and **Firefox** (Manifest V3).
 3. Click **Load unpacked**
 4. Select the `extension/` folder from this repo
 5. Click the puzzle-piece icon in the toolbar and pin **Bookmark Manager Companion**
-6. Click the extension → ⚙️ → enter your backend URL  
-   *(e.g. `http://bookmark-manager` on your Tailnet, or `http://100.x.y.z`)*
-7. Press **Test connection** → should say `✔ reachable`. Save.
+6. Click the extension → ⚙️
+   - Enter your backend URL  *(e.g. `http://bookmark-manager` on your Tailnet, or `http://100.x.y.z`)*
+   - **If your server has auth enabled** (default), open the web app → Settings → Personal access tokens → **New token**, copy it, and paste it into the extension's **Personal Access Token** field.
+   - Press **Test connection** → should say `✔ signed in as you@example.com`. Save.
 
 ### Firefox
 
@@ -60,6 +61,7 @@ zip -r ../bookmark-companion.zip . -x '*.md' '*.DS_Store'
 
 ## Limitations / Notes
 
-- The backend currently runs in **single-user mode** (no auth). The extension just needs the URL.
-- Once you add auth, the extension will need to send a Bearer token — ping the maintainer.
-- `chrome:`/`about:` pages can’t be saved (browsers block extensions from reading those URLs).
+- The backend is **single-user** with optional JWT auth (`AUTH_ENABLED=true` by default).
+- When auth is on, the extension authenticates via a **Personal Access Token (PAT)** created in the web app's Settings. Tokens are long-lived and revocable.
+- When auth is off (`AUTH_ENABLED=false`), the PAT field can be left blank.
+- `chrome:`/`about:` pages can't be saved (browsers block extensions from reading those URLs).

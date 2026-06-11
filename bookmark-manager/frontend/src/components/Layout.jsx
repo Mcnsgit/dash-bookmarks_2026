@@ -1,10 +1,11 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import {
   Bookmark, BookOpen, FolderTree, Tags, Layers, NotebookPen,
-  Search, Plus, Upload, Settings, Sun, Moon, Menu, Sparkles
+  Search, Plus, Upload, Settings, Sun, Moon, Menu, Sparkles, LogOut, User
 } from 'lucide-react';
 import { useUI } from '../store.js';
+import { useAuth } from '../auth.js';
 import SearchPalette from './SearchPalette.jsx';
 import FolderTreeNav from './FolderTreeNav.jsx';
 import VikunjaWidget from './VikunjaWidget.jsx';
@@ -29,6 +30,8 @@ const NavItem = ({ to, icon: Icon, children, end }) => (
 
 export default function Layout() {
   const { sidebarOpen, toggleSidebar, dark, toggleDark } = useUI();
+  const { user, status, logout } = useAuth();
+  const nav = useNavigate();
   const { pathname } = useLocation();
   useEffect(() => { /* close on nav on mobile */ }, [pathname]);
   const stats = useQuery({ queryKey: ['stats'], queryFn: () => api.get('/stats') });
@@ -85,6 +88,29 @@ export default function Layout() {
           <button className="btn-ghost p-2" onClick={toggleDark} aria-label="Toggle theme">
             {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
+          {status?.auth_enabled && user && (
+            <div className="relative group">
+              <button className="btn-ghost p-2 flex items-center gap-2" title={user.email}>
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-400 to-brand-700 grid place-items-center text-white text-xs font-semibold">
+                  {(user.display_name || user.email || '?').slice(0, 1).toUpperCase()}
+                </div>
+              </button>
+              <div className="absolute right-0 top-full mt-1 w-56 card p-1 hidden group-hover:flex group-focus-within:flex flex-col z-30">
+                <div className="px-3 py-2 border-b border-ink-100 dark:border-ink-700">
+                  <div className="text-sm font-medium truncate">{user.display_name || 'Me'}</div>
+                  <div className="text-xs text-ink-400 truncate">{user.email}</div>
+                </div>
+                <button className="text-left px-3 py-2 text-sm hover:bg-ink-50 dark:hover:bg-ink-800 rounded-md flex items-center gap-2"
+                        onClick={() => nav('/settings')}>
+                  <Settings className="w-4 h-4" /> Settings & tokens
+                </button>
+                <button className="text-left px-3 py-2 text-sm hover:bg-red-50 dark:hover:bg-ink-800 rounded-md text-red-600 dark:text-red-400 flex items-center gap-2"
+                        onClick={() => { logout(); nav('/login'); }}>
+                  <LogOut className="w-4 h-4" /> Sign out
+                </button>
+              </div>
+            </div>
+          )}
         </header>
         <div className="flex-1 overflow-y-auto">
           <Outlet />

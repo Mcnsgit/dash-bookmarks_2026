@@ -1,22 +1,26 @@
 [
   {
-    "content": "Create MV3 manifest, icons, options page (backend URL)",
+    "content": "Backend: schema + auth lib (bcryptjs, jsonwebtoken) + middleware (JWT + PAT + AUTH_ENABLED toggle)",
     "status": "completed"
   },
   {
-    "content": "Popup UI: save current tab + save all tabs as session",
+    "content": "Backend: /api/auth routes (status, signup-first-run, login, me, tokens CRUD)",
     "status": "completed"
   },
   {
-    "content": "Background service worker: context menu \"Save to Bookmarks\"",
+    "content": "Frontend: AuthContext + Login + Setup screens + protected routes + axios bearer",
     "status": "completed"
   },
   {
-    "content": "Extension README + Firefox-compat notes",
+    "content": "Frontend: PAT management in Settings + logout in header",
     "status": "completed"
   },
   {
-    "content": "Re-tar bookmark-manager bundle",
+    "content": "Extension: PAT field in Options, Authorization header in apiFetch, validation via /me",
+    "status": "completed"
+  },
+  {
+    "content": "Update .env.example + README + re-tar",
     "status": "completed"
   }
 ]

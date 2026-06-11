@@ -3,6 +3,7 @@ const api = typeof browser !== 'undefined' ? browser : chrome;
 
 const DEFAULTS = {
   backendUrl: '',          // e.g. http://bookmark-manager  or  http://100.64.0.1
+  accessToken: '',         // Personal Access Token (bmpat_...) from web app's Settings
   defaultFolderId: '',
   defaultTags: '',
   capturePinned: false,
@@ -26,20 +27,33 @@ function baseUrl(u) {
 }
 
 export async function apiFetch(path, opts = {}) {
-  const { backendUrl } = await getSettings();
+  const { backendUrl, accessToken } = await getSettings();
   const base = baseUrl(backendUrl);
   if (!base) throw new Error('Backend URL not configured. Open the extension options first.');
+  const headers = {};
+  if (opts.body) headers['Content-Type'] = 'application/json';
+  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
   const res = await fetch(base + path, {
     method: opts.method || 'GET',
-    headers: opts.body ? { 'Content-Type': 'application/json' } : undefined,
+    headers,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
+  if (res.status === 401) {
+    throw new Error('Unauthorized — generate a Personal Access Token in the app\u2019s Settings and paste it into the extension options.');
+  }
   if (!res.ok) {
     let msg = res.statusText;
     try { const j = await res.json(); msg = j.error || msg; } catch {}
     throw new Error(msg);
   }
   return res.status === 204 ? null : res.json();
+}
+
+export async function authStatus() {
+  return apiFetch('/api/health');   // public, no auth required
+}
+export async function whoAmI() {
+  return apiFetch('/api/auth/me');  // verifies the token actually works
 }
 
 export async function saveBookmark({ url, title, folder_id, tags }) {

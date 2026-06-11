@@ -13,6 +13,8 @@ Personal bookmark manager with BookmarkOS-style UI, deployed on Hetzner CX33 (or
 - Real-time sync across devices (WebSocket)
 - Import from Chrome, Firefox, Safari, Edge (HTML/JSON) with duplicate detection & analysis
 - Vikunja task integration (sidebar widget, create-from-bookmark, mark done)
+- **Single-user JWT auth** with first-run setup, password change, and Personal Access Tokens for the browser extension
+- **No-auth mode toggle** (`AUTH_ENABLED=false`) for local dev
 - Secure access via Tailscale (no public ports)
 
 ## Architecture
@@ -67,10 +69,23 @@ http://bookmark-manager
 | `POSTGRES_PASSWORD` | PostgreSQL password | **required** |
 | `POSTGRES_USER` | PostgreSQL user | `bookmarkuser` |
 | `POSTGRES_DB` | PostgreSQL DB name | `bookmarks` |
-| `JWT_SECRET` | Reserved for future auth | random |
+| `JWT_SECRET` | Secret for signing JWTs | **required** |
+| `JWT_TTL` | Token lifetime | `30d` |
+| `AUTH_ENABLED` | `true` = email/password + JWT, `false` = no auth | `true` |
 | `VIKUNJA_API_URL` | Your Vikunja base URL (e.g. https://vikunja.example.com/api/v1) | optional |
 | `VIKUNJA_TOKEN` | Vikunja personal API token (Bearer) | optional |
-| `DEFAULT_USER_EMAIL` | Auto-seeded single-user email | `me@local` |
+| `DEFAULT_USER_EMAIL` | Used only when `AUTH_ENABLED=false` to auto-seed a single user | `me@local` |
+
+## First-run setup
+
+When `AUTH_ENABLED=true` (default), the first time you open the app you'll be sent to a **setup screen** to create your account (email + password, min 8 chars). After that, you sign in normally.
+
+Forgot your password? SSH into the server and run:
+```bash
+docker compose exec postgres psql -U bookmarkuser -d bookmarks -c \
+  "UPDATE users SET password_hash = NULL;"
+# Then reload the app — it'll show the setup screen again.
+```
 
 ## Management Commands
 

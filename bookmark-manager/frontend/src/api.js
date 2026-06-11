@@ -1,14 +1,32 @@
 // Minimal fetch wrapper.
 const base = '/api';
+const TOKEN_KEY = 'bm.token';
+
+export function getToken() {
+  try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; }
+}
+export function setToken(t) {
+  try {
+    if (t) localStorage.setItem(TOKEN_KEY, t);
+    else   localStorage.removeItem(TOKEN_KEY);
+  } catch {}
+}
 
 async function http(method, path, body, opts = {}) {
   const headers = { ...(opts.headers || {}) };
+  const token = getToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
   let payload = body;
   if (body && !(body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
     payload = JSON.stringify(body);
   }
   const res = await fetch(base + path, { method, headers, body: payload });
+  if (res.status === 401) {
+    // Token invalid/expired \u2014 clear it and let the app re-route to login.
+    setToken('');
+    window.dispatchEvent(new CustomEvent('bm:unauthorized'));
+  }
   if (!res.ok) {
     let msg = res.statusText;
     try { const j = await res.json(); msg = j.error || msg; } catch {}
