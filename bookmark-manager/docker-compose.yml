@@ -13,32 +13,9 @@ volumes:
   postgres-data:
   redis-data:
   screenshots:
-  ts-state:
+
 
 services:
-  # ----------------------------------------------------------
-  # Tailscale sidecar — the ONLY component with network access
-  # ----------------------------------------------------------
-  tailscale:
-    image: tailscale/tailscale:latest
-    container_name: bm-tailscale
-    hostname: ${TS_HOSTNAME:-bookmark-manager}
-    environment:
-      - TS_AUTHKEY=${TS_AUTHKEY}
-      - TS_HOSTNAME=${TS_HOSTNAME:-bookmark-manager}
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=false
-      - TS_EXTRA_ARGS=--accept-routes
-    volumes:
-      - ts-state:/var/lib/tailscale
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-      - sys_module
-    restart: unless-stopped
-    networks:
-      - bookmark-net
-
   # ----------------------------------------------------------
   # PostgreSQL 16 with full-text search
   # ----------------------------------------------------------
@@ -143,10 +120,11 @@ services:
     depends_on:
       - frontend
       - backend
-      - tailscale
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - screenshots:/screenshots:ro
+    ports:
+      - "127.0.0.1:8085:80"
+    networks:
+      - bookmark-net
     restart: unless-stopped
-    # Sidecar pattern: share tailscale's net so app is only on tailnet
-    network_mode: "service:tailscale"
