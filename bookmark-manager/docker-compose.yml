@@ -83,7 +83,7 @@ services:
     container_name: bm-backend
     env_file: .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER:-bookmarkuser}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-bookmarks}
+      # DATABASE_URL is supplied by .env / Coolify env vars — no shell interpolation here
       - REDIS_URL=redis://redis:6379
       - SCREENSHOT_SERVICE_URL=http://screenshot:5000
       - NODE_ENV=production
