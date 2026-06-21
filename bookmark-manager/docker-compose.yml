@@ -1,7 +1,4 @@
 # Self-Hosted Bookmark Manager — docker-compose stack
-#
-# Architecture: nginx shares the Tailscale container's network namespace
-# (sidecar pattern) so the app is reachable ONLY on the tailnet.
 
 name: bookmark-manager
 
@@ -14,11 +11,11 @@ volumes:
   redis-data:
   screenshots:
 
+configs:
+  nginx_conf:
+    file: ./nginx/nginx.conf
 
 services:
-  # ----------------------------------------------------------
-  # PostgreSQL 16 with full-text search
-  # ----------------------------------------------------------
   postgres:
     image: postgres:16-alpine
     container_name: bm-postgres
@@ -39,9 +36,6 @@ services:
       retries: 5
     mem_limit: 512m
 
-  # ----------------------------------------------------------
-  # Redis 7 — cache + websocket pubsub
-  # ----------------------------------------------------------
   redis:
     image: redis:7-alpine
     container_name: bm-redis
@@ -58,9 +52,6 @@ services:
       retries: 5
     mem_limit: 128m
 
-  # ----------------------------------------------------------
-  # Screenshot microservice (Puppeteer + Chromium)
-  # ----------------------------------------------------------
   screenshot:
     build: ./screenshot
     container_name: bm-screenshot
@@ -75,15 +66,11 @@ services:
     mem_limit: 1g
     shm_size: 1g
 
-  # ----------------------------------------------------------
-  # Backend API (Node + Express)
-  # ----------------------------------------------------------
   backend:
     build: ./backend
     container_name: bm-backend
     env_file: .env
     environment:
-      # DATABASE_URL is supplied by .env / Coolify env vars — no shell interpolation here
       - REDIS_URL=redis://redis:6379
       - SCREENSHOT_SERVICE_URL=http://screenshot:5000
       - NODE_ENV=production
@@ -100,9 +87,6 @@ services:
       - bookmark-net
     mem_limit: 512m
 
-  # ----------------------------------------------------------
-  # Frontend (built static files served by its own nginx)
-  # ----------------------------------------------------------
   frontend:
     build: ./frontend
     container_name: bm-frontend
@@ -111,17 +95,16 @@ services:
       - bookmark-net
     mem_limit: 128m
 
-  # ----------------------------------------------------------
-  # nginx reverse-proxy — shares Tailscale network namespace
-  # ----------------------------------------------------------
   nginx:
     image: nginx:1.27-alpine
     container_name: bm-nginx
     depends_on:
       - frontend
       - backend
+    configs:
+      - source: nginx_conf
+        target: /etc/nginx/nginx.conf
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - screenshots:/screenshots:ro
     networks:
       - bookmark-net
