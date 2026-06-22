@@ -1,0 +1,170 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------
+  # Backend: lint + jest (real Postgres + Redis service containers)
+  # ---------------------------------------------------------------------
+  backend:
+    name: Backend (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20']
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER:     bookmarkuser
+          POSTGRES_PASSWORD: bookmarkpass
+          POSTGRES_DB:       bookmarks_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U bookmarkuser -d bookmarks_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: bookmark-manager/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: yarn
+          cache-dependency-path: bookmark-manager/backend/yarn.lock
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Syntax check (node --check)
+        run: |
+          for f in $(find src tests -name '*.js'); do node --check "$f"; done
+      - name: Jest (supertest + real Postgres)
+        env:
+          TEST_DATABASE_URL: postgres://bookmarkuser:bookmarkpass@localhost:5432/bookmarks_test
+          REDIS_URL:         redis://localhost:6379
+          JWT_SECRET:        ci-test-secret
+        run: yarn test
+
+  # ---------------------------------------------------------------------
+  # Frontend: build the Vite bundle
+  # ---------------------------------------------------------------------
+  frontend-build:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bookmark-manager/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: yarn
+          cache-dependency-path: bookmark-manager/frontend/yarn.lock
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: bookmark-manager/frontend/dist
+          if-no-files-found: error
+          retention-days: 7
+
+  # ---------------------------------------------------------------------
+  # E2E: spin up backend + frontend together, run Playwright critical-path
+  # ---------------------------------------------------------------------
+  e2e:
+    name: Playwright E2E
+    needs: [backend, frontend-build]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER:     bookmarkuser
+          POSTGRES_PASSWORD: bookmarkpass
+          POSTGRES_DB:       bookmarks
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U bookmarkuser -d bookmarks"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+    env:
+      DATABASE_URL: postgres://bookmarkuser:bookmarkpass@localhost:5432/bookmarks
+      REDIS_URL:    redis://localhost:6379
+      JWT_SECRET:   ci-e2e-secret
+      AUTH_ENABLED: 'true'
+      DEFAULT_USER_EMAIL: me@local
+      PORT: '4000'
+      PLAYWRIGHT_BASE_URL: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+
+      - name: Install backend deps
+        working-directory: bookmark-manager/backend
+        run: yarn install --frozen-lockfile
+
+      - name: Apply DB schema
+        working-directory: bookmark-manager/backend
+        run: |
+          PGPASSWORD=bookmarkpass psql -h localhost -U bookmarkuser -d bookmarks \
+            -f src/migrations/001_init.sql
+
+      - name: Start backend in background
+        working-directory: bookmark-manager/backend
+        run: |
+          nohup node src/server.js > /tmp/backend.log 2>&1 &
+          for i in {1..30}; do
+            if curl -sf http://localhost:4000/api/health; then echo; break; fi
+            sleep 1
+          done
+
+      - name: Install frontend deps
+        working-directory: bookmark-manager/frontend
+        run: yarn install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: bookmark-manager/frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E
+        working-directory: bookmark-manager/frontend
+        run: yarn test:e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: bookmark-manager/frontend/playwright-report
+          retention-days: 7
+      - name: Backend log on failure
+        if: failure()
+        run: tail -200 /tmp/backend.log || true

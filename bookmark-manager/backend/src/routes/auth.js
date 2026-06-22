@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 import { q } from '../db.js';
 import {
   AUTH_ENABLED, hashPassword, verifyPassword, issueJwt,
@@ -9,6 +9,16 @@ import { authenticate } from '../middleware/authMiddleware.js';
 import * as oidc from '../oidc.js';
 
 const r = Router();
+
+// Convert ZodError -> 400 with a flat message list
+function zodErrorMiddleware(err, _req, res, next) {
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      error: err.issues.map((i) => `${i.path.join('.') || 'body'}: ${i.message}`).join('; '),
+    });
+  }
+  next(err);
+}
 
 const Email    = z.string().email().toLowerCase();
 const Password = z.string().min(8, 'Password must be at least 8 characters');
@@ -158,6 +168,9 @@ function sanitize(u) {
 }
 
 // ===== OIDC / SSO =========================================================
+
+// Apply zod -> 400 conversion for everything above.
+r.use(zodErrorMiddleware);
 
 // Kick off the OIDC flow. Returns 302 to the provider's authorize URL.
 r.get('/oidc/login', async (_req, res, next) => {
