@@ -11,10 +11,6 @@ volumes:
   redis-data:
   screenshots:
 
-configs:
-  nginx_conf:
-    file: ./nginx/nginx.conf
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -96,16 +92,15 @@ services:
     mem_limit: 128m
 
   nginx:
-    image: nginx:1.27-alpine
+    build: ./nginx
     container_name: bm-nginx
     depends_on:
       - frontend
       - backend
-    configs:
-      - source: nginx_conf
-        target: /etc/nginx/nginx.conf
     volumes:
       - screenshots:/screenshots:ro
     networks:
       - bookmark-net
     restart: unless-stopped
+    ports:
+      - "80:80"
