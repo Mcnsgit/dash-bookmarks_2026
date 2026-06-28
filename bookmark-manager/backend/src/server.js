@@ -13,17 +13,17 @@ import { redisInit } from './redis.js';
 import { AUTH_ENABLED } from './auth.js';
 import { authenticate, initNoAuthUser } from './middleware/authMiddleware.js';
 
-import authRouter        from './routes/auth.js';
-import bookmarksRouter   from './routes/bookmarks.js';
-import foldersRouter     from './routes/folders.js';
-import tagsRouter        from './routes/tags.js';
-import sessionsRouter    from './routes/sessions.js';
+import authRouter from './routes/auth.js';
+import bookmarksRouter from './routes/bookmarks.js';
+import foldersRouter from './routes/folders.js';
+import tagsRouter from './routes/tags.js';
+import sessionsRouter from './routes/sessions.js';
 import readingListRouter from './routes/readingList.js';
-import notesRouter       from './routes/notes.js';
-import importRouter      from './routes/import.js';
-import searchRouter      from './routes/search.js';
-import vikunjaRouter     from './routes/vikunja.js';
-import statsRouter       from './routes/stats.js';
+import notesRouter from './routes/notes.js';
+import importRouter from './routes/import.js';
+import searchRouter from './routes/search.js';
+import vikunjaRouter from './routes/vikunja.js';
+import statsRouter from './routes/stats.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '4000', 10);
@@ -41,16 +41,16 @@ app.use('/api/auth', authRouter);
 // Authenticated endpoints ---------------------------------------------------
 app.use('/api', authenticate);
 
-app.use('/api/bookmarks',    bookmarksRouter);
-app.use('/api/folders',      foldersRouter);
-app.use('/api/tags',         tagsRouter);
-app.use('/api/sessions',     sessionsRouter);
+app.use('/api/bookmarks', bookmarksRouter);
+app.use('/api/folders', foldersRouter);
+app.use('/api/tags', tagsRouter);
+app.use('/api/sessions', sessionsRouter);
 app.use('/api/reading-list', readingListRouter);
-app.use('/api/notes',        notesRouter);
-app.use('/api/import',       importRouter);
-app.use('/api/search',       searchRouter);
-app.use('/api/vikunja',      vikunjaRouter);
-app.use('/api/stats',        statsRouter);
+app.use('/api/notes', notesRouter);
+app.use('/api/import', importRouter);
+app.use('/api/search', searchRouter);
+app.use('/api/vikunja', vikunjaRouter);
+app.use('/api/stats', statsRouter);
 
 app.use((err, _req, res, _next) => {
   console.error('[err]', err);
