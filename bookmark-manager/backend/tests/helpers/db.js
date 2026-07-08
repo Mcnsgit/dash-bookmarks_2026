@@ -33,15 +33,18 @@ export async function setupTestDb() {
 }
 
 export async function resetTestDb() {
-  // TRUNCATE every data table; preserve schema.
-  await pool.query(`
-    TRUNCATE TABLE
-      vikunja_tasks, import_history, notes, reading_list,
-      session_bookmarks, tab_sessions,
-      bookmark_tags, bookmarks, tags, folders,
-      personal_access_tokens, users
-    RESTART IDENTITY CASCADE;
+  // TRUNCATE every data table dynamically; preserve schema.
+  const res = await pool.query(`
+    SELECT tablename 
+    FROM pg_tables 
+    WHERE schemaname = 'public' 
+      AND tablename NOT IN ('spatial_ref_sys');
   `);
+  
+  const tables = res.rows.map(r => r.tablename).join(', ');
+  if (tables) {
+    await pool.query(`TRUNCATE TABLE ${tables} RESTART IDENTITY CASCADE;`);
+  }
 }
 
 export async function teardownTestDb() {

@@ -3,7 +3,7 @@ export default {
   testEnvironment: 'node',
   transform: {},
   testMatch: ['**/tests/**/*.test.js'],
-  setupFilesAfterEach: [],
+  setupFilesAfterEnv: [],
   testTimeout: 15000,
   verbose: true,
 };

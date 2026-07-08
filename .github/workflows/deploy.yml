@@ -51,4 +51,4 @@ jobs:
       - name: Health-check
         run: |
           ssh ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }} \
-            'for i in {1..30}; do curl -sf http://localhost:4000/api/health && break || sleep 2; done'
+            'curl -sf --retry 15 --retry-delay 2 --retry-all-errors http://localhost:4000/api/health'
