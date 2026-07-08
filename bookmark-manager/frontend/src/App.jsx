@@ -18,8 +18,13 @@ import { connectWs } from './api.js';
 
 export default function App() {
   const initDark = useUI((s) => s.initDark);
-  const initAuth = useAuth((s) => s.init);
+  const { init: initAuth, ready } = useAuth();
   useEffect(() => { initDark(); initAuth(); connectWs(); }, [initDark, initAuth]);
+
+  if (!ready) {
+    return <div className="min-h-screen grid place-items-center text-sm text-ink-500">Loading…</div>;
+  }
+
   return (
     <Routes>
       <Route path="/login" element={<LoginView />} />

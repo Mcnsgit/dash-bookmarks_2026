@@ -166,9 +166,13 @@ If you want **Sign in with Google / Authentik / Keycloak / Auth0** instead of (o
 The redirect URI you register with the provider must be:
 
 ```
-http://<TS_HOSTNAME>/api/auth/oidc/callback
+http://<your-domain-or-ip>/api/auth/oidc/callback
 ```
-(e.g. `http://bookmark-manager/api/auth/oidc/callback`)
+or
+```
+https://<your-domain-or-ip>/api/auth/oidc/callback
+```
+(e.g. `https://bookmark-home.example.com/api/auth/oidc/callback` or `http://192.168.1.100/api/auth/oidc/callback`)
 
 > Google **requires HTTPS** for redirect URIs *unless* the origin is `localhost`.
 > Behind Tailscale you can either:
@@ -180,16 +184,16 @@ http://<TS_HOSTNAME>/api/auth/oidc/callback
 1. https://console.cloud.google.com → APIs & Services → OAuth consent screen → set up an *External* or *Internal* app.
 2. Credentials → **+ Create credentials → OAuth client ID** → *Web application*.
 3. **Authorized redirect URIs**:
-   `https://bookmark-manager.<your-tailnet>.ts.net/api/auth/oidc/callback`
+   `https://<your-domain-or-ip>/api/auth/oidc/callback` (must be HTTPS)
 4. Copy **Client ID** and **Client secret**.
 5. Edit `.env`:
-   ```
+   ```env
    OIDC_ENABLED=true
    OIDC_PROVIDER_NAME=Google
    OIDC_ISSUER_URL=https://accounts.google.com
    OIDC_CLIENT_ID=...apps.googleusercontent.com
    OIDC_CLIENT_SECRET=...
-   OIDC_REDIRECT_URI=https://bookmark-manager.<your-tailnet>.ts.net/api/auth/oidc/callback
+   OIDC_REDIRECT_URI=https://<your-domain-or-ip>/api/auth/oidc/callback
    OIDC_SCOPES=openid email profile
    OIDC_ALLOWED_EMAILS=you@gmail.com
    ```
@@ -200,20 +204,20 @@ http://<TS_HOSTNAME>/api/auth/oidc/callback
    - Name: `bookmark-manager`
    - Authorization flow: `default-provider-authorization-implicit-consent`
    - Client type: **Confidential**
-   - **Redirect URIs**: `http://bookmark-manager/api/auth/oidc/callback`
+   - **Redirect URIs**: `https://<your-domain-or-ip>/api/auth/oidc/callback` (or `http` if not using SSL)
    - Signing key: pick the default
 2. **Applications** → *Create* → link to the provider, slug `bookmark-manager`.
 3. Copy **Client ID** + **Client secret** from the provider page.
 4. The OIDC issuer URL is shown on the provider page; usually:
    `https://authentik.example.com/application/o/bookmark-manager/`
 5. Edit `.env`:
-   ```
+   ```env
    OIDC_ENABLED=true
    OIDC_PROVIDER_NAME=Authentik
    OIDC_ISSUER_URL=https://authentik.example.com/application/o/bookmark-manager/
    OIDC_CLIENT_ID=...
    OIDC_CLIENT_SECRET=...
-   OIDC_REDIRECT_URI=http://bookmark-manager/api/auth/oidc/callback
+   OIDC_REDIRECT_URI=https://<your-domain-or-ip>/api/auth/oidc/callback
    OIDC_ALLOWED_EMAILS=you@example.com
    ```
 
