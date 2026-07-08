@@ -51,10 +51,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          cache: yarn
-          cache-dependency-path: bookmark-manager/backend/yarn.lock
+          cache: npm
+          cache-dependency-path: bookmark-manager/backend/package-lock.json
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
       - name: Syntax check (node --check)
         run: |
           for f in $(find src tests -name '*.js'); do node --check "$f"; done
@@ -63,7 +63,7 @@ jobs:
           TEST_DATABASE_URL: postgres://bookmarkuser:bookmarkpass@localhost:5432/bookmarks_test
           REDIS_URL:         redis://localhost:6379
           JWT_SECRET:        ci-test-secret
-        run: yarn test
+        run: npm run test
 
   # ---------------------------------------------------------------------
   # Frontend: build the Vite bundle
@@ -79,10 +79,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: yarn
-          cache-dependency-path: bookmark-manager/frontend/yarn.lock
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
+          cache: npm
+          cache-dependency-path: bookmark-manager/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -129,7 +129,7 @@ jobs:
 
       - name: Install backend deps
         working-directory: bookmark-manager/backend
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Apply DB schema
         working-directory: bookmark-manager/backend
@@ -148,7 +148,7 @@ jobs:
 
       - name: Install frontend deps
         working-directory: bookmark-manager/frontend
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Install Playwright browsers
         working-directory: bookmark-manager/frontend
@@ -156,7 +156,7 @@ jobs:
 
       - name: Run Playwright E2E
         working-directory: bookmark-manager/frontend
-        run: yarn test:e2e
+        run: npm run test:e2e
 
       - name: Upload Playwright report on failure
         if: failure()

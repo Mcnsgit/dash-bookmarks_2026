@@ -21,6 +21,7 @@ export async function setupTestDb() {
   process.env.JWT_SECRET = 'test-secret-key-do-not-use-in-prod';
   process.env.OIDC_ENABLED = 'false';
   process.env.REDIS_URL = 'redis://localhost:6379';     // optional; redis init is best-effort
+  process.env.SCREENSHOTS_DIR = path.join(process.cwd(), '.tmp-screenshots');
 
   pool = new Pool({ connectionString: TEST_DATABASE_URL });
 
@@ -29,7 +30,13 @@ export async function setupTestDb() {
     path.join(__dirname, '..', '..', 'src', 'migrations', '001_init.sql'),
     'utf8'
   );
-  await pool.query(sql);
+  
+  await pool.query('SELECT pg_advisory_lock(123456789)');
+  try {
+    await pool.query(sql);
+  } finally {
+    await pool.query('SELECT pg_advisory_unlock(123456789)');
+  }
 }
 
 export async function resetTestDb() {
