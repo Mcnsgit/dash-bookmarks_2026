@@ -1,22 +1,26 @@
 [
   {
-    "content": "Backend: openid-client dep, schema (oidc_sub/oidc_issuer), oidc helper module",
+    "content": "Cleanup: delete /app/backend and /app/frontend (stale FARM template). Add a top-level README to mirror the cleanup in the GitHub repo.",
     "status": "completed"
   },
   {
-    "content": "Backend: /api/auth/oidc/login + /callback routes; expose oidc_enabled in status",
+    "content": "Backend tests: Jest + supertest with pg-mem (in-memory Postgres) covering /api/auth (signup/login/me/tokens), /api/bookmarks CRUD, /api/import analyze+commit, /api/folders, /api/sessions",
     "status": "completed"
   },
   {
-    "content": "Frontend: OIDC buttons on Login + Setup, /oidc/callback route that stores token",
-    "status": "completed"
+    "content": "E2E test scaffold: Playwright config + 1 critical-path test (setup -> login -> add bookmark -> import HTML -> create PAT)",
+    "status": "in_progress"
   },
   {
-    "content": "Update .env.example, README, write DEPLOYMENT.md with step-by-step instructions for Hetzner + Tailscale + Google/Authentik OIDC",
-    "status": "completed"
+    "content": "CI: .github/workflows/ci.yml with Postgres+Redis service containers, lint + backend jest + frontend build",
+    "status": "pending"
   },
   {
-    "content": "Re-validate (lint, build) and re-tar",
-    "status": "completed"
+    "content": "Optional CD: .github/workflows/deploy.yml that SSHs to Hetzner and rebuilds on main merges",
+    "status": "pending"
+  },
+  {
+    "content": "Re-validate, re-tar, write UNIFICATION.md explaining what was/wasn't done & why",
+    "status": "pending"
   }
 ]

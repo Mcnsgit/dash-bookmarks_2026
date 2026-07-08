@@ -1,0 +1,54 @@
+name: Deploy to Hetzner
+
+on:
+  # Manual trigger only by default. Uncomment the `push` block once you trust the
+  # pipeline.
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to deploy (default = main)'
+        required: false
+        default: main
+  # push:
+  #   branches: [main]
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: SSH → docker compose up -d --build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: ${{ github.event.inputs.ref || 'main' }} }
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.HETZNER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Push code to server
+        run: |
+          rsync -avz --delete \
+            --exclude '.git' --exclude 'node_modules' --exclude '*/node_modules' \
+            --exclude '.env' --exclude 'backups' --exclude 'dist' \
+            bookmark-manager/ \
+            ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:${{ secrets.HETZNER_PATH }}/
+
+      - name: Rebuild & restart on Hetzner
+        run: |
+          ssh ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }} \
+            "cd ${{ secrets.HETZNER_PATH }} && \
+             docker compose build --pull && \
+             docker compose up -d --remove-orphans && \
+             docker image prune -f"
+
+      - name: Health-check
+        run: |
+          ssh ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }} \
+            'curl -sf --retry 15 --retry-delay 2 --retry-all-errors http://localhost:4000/api/health'
