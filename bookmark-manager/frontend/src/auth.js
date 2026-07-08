@@ -11,8 +11,8 @@ export const useAuth = create((set, get) => ({
       const status = await api.get('/auth/status');
       set({ status });
       if (!status.auth_enabled) {
-        // No-auth mode; backend will use default user. Mark ready immediately.
-        try { const me = await api.get('/auth/me'); set({ user: me.user }); } catch {}
+        // No-auth mode;
+        try { const me = await api.get('/auth/me'); set({ user: me.user }); } catch { }
         set({ ready: true });
         return;
       }
@@ -26,7 +26,7 @@ export const useAuth = create((set, get) => ({
         setToken(''); set({ ready: true });
       }
     } catch (e) {
-      // Backend unreachable; still let UI render so we can show a useful error.
+
       set({ ready: true });
     }
   },
