@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 const SVC = process.env.SCREENSHOT_SERVICE_URL || 'http://screenshot:5000';
-const DIR = '/screenshots';
+const DIR = process.env.SCREENSHOTS_DIR || '/screenshots';
 
 export async function captureScreenshot(bookmarkId, url) {
   try {
