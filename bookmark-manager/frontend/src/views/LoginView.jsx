@@ -24,8 +24,17 @@ export default function LoginView() {
     e.preventDefault();
     setBusy(true);
     try {
-      if (isSetup) await signup(form);
-      else await login({ email: form.email, password: form.password });
+      if (isSetup) {
+        // Only include display_name if actually provided (avoids Zod .min(1) failures on "")
+        const payload = {
+          email: form.email.trim(),
+          password: form.password,
+          ...(form.display_name?.trim() ? { display_name: form.display_name.trim() } : {})
+        };
+        await signup(payload);
+      } else {
+        await login({ email: form.email.trim(), password: form.password });
+      }
       toast.success(isSetup ? 'Welcome! Account created.' : 'Logged in');
       nav('/');
     } catch (err) {

@@ -19,7 +19,7 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: process.env.PLAYWRIGHT_NO_SERVER ? undefined : {
-    command: 'yarn dev',
+    command: 'npm run dev',
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,

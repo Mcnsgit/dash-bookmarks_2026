@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -31,7 +32,7 @@ export default function AddBookmarkModal({ onClose, defaultFolder = null }) {
     const tags = form.tags.split(',').map((t) => t.trim()).filter(Boolean);
     m.mutate({ ...form, tags });
   };
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 bg-ink-900/60 backdrop-blur-md grid place-items-center p-4" onClick={onClose}>
       {/* Explicit solid background (bg-white dark:bg-ink-900) ensures zero bleed-through */}
       <form
@@ -111,6 +112,7 @@ export default function AddBookmarkModal({ onClose, defaultFolder = null }) {
           </button>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body
   );
 }
