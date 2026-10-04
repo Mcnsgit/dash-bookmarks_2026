@@ -1,7 +1,11 @@
 // Thin Vikunja API client.
 import axios from 'axios';
 
-const base = () => (process.env.VIKUNJA_API_URL || '').replace(/\/+$/, '');
+const base = () => {
+  const b = (process.env.VIKUNJA_API_URL || '').replace(/\/+$/, '');
+  return b.endsWith('/api/v1') ? b : `${b}/api/v1`;
+};
+
 const token = () => process.env.VIKUNJA_TOKEN || '';
 
 export function isConfigured() { return !!(base() && token()); }
@@ -16,8 +20,8 @@ function client() {
 
 export async function getTasks(filter = 'all') {
   if (!isConfigured()) throw new Error('Vikunja is not configured');
-  // /tasks/all returns all assigned tasks
-  const { data } = await client().get('/tasks/all', { params: { sort_by: 'due_date' } });
+  // Use /tasks instead of deprecated /tasks/all
+  const { data } = await client().get('/tasks', { params: { sort_by: 'due_date' } });
   const tasks = Array.isArray(data) ? data : (data?.tasks || []);
   const now = Date.now();
   return tasks.filter((t) => {
@@ -25,8 +29,8 @@ export async function getTasks(filter = 'all') {
     if (filter === 'open') return !t.done;
     const due = t.due_date && t.due_date !== '0001-01-01T00:00:00Z' ? new Date(t.due_date).getTime() : null;
     if (filter === 'overdue') return !t.done && due && due < now;
-    if (filter === 'today')   return !t.done && due && (due - now) < 86_400_000 && due > now - 86_400_000;
-    if (filter === 'week')    return !t.done && due && (due - now) < 7 * 86_400_000;
+    if (filter === 'today') return !t.done && due && (due - now) < 86_400_000 && due > now - 86_400_000;
+    if (filter === 'week') return !t.done && due && (due - now) < 7 * 86_400_000;
     return true;
   });
 }
