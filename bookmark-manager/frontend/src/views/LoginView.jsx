@@ -25,7 +25,7 @@ export default function LoginView() {
     setBusy(true);
     try {
       if (isSetup) await signup(form);
-      else         await login({ email: form.email, password: form.password });
+      else await login({ email: form.email, password: form.password });
       toast.success(isSetup ? 'Welcome! Account created.' : 'Logged in');
       nav('/');
     } catch (err) {
@@ -43,7 +43,7 @@ export default function LoginView() {
             <Bookmark className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-lg font-semibold leading-none">Bookmark OS</div>
+            <h1 className="text-lg font-semibold leading-none">Bookmark OS</h1>
             <div className="text-xs text-ink-500">{isSetup ? 'Create your account' : 'Sign in'}</div>
           </div>
         </div>
@@ -71,19 +71,19 @@ export default function LoginView() {
           {isSetup && (
             <label className="text-xs text-ink-500">Display name (optional)
               <input className="input mt-1" autoFocus value={form.display_name}
-                     onChange={(e) => setForm({ ...form, display_name: e.target.value })} />
+                onChange={(e) => setForm({ ...form, display_name: e.target.value })} />
             </label>
           )}
           <label className="text-xs text-ink-500">Email
             <input type="email" required className="input mt-1" autoComplete="username"
-                   autoFocus={!isSetup} value={form.email}
-                   onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              autoFocus={!isSetup} value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </label>
           <label className="text-xs text-ink-500">Password {isSetup && <span className="text-ink-400">(min 8 characters)</span>}
             <input type="password" required minLength={isSetup ? 8 : 1}
-                   className="input mt-1" autoComplete={isSetup ? 'new-password' : 'current-password'}
-                   value={form.password}
-                   onChange={(e) => setForm({ ...form, password: e.target.value })} />
+              className="input mt-1" autoComplete={isSetup ? 'new-password' : 'current-password'}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })} />
           </label>
         </div>
 
